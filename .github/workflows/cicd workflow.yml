@@ -1,45 +1,49 @@
 name: cicd
 on:
   push:
-    branches: [ main ]
+    branches:
+    - "main"
 
 jobs:
-- name: build
-  runs-on: ubuntu-latest
-  steps:
+  build-workflow:
+    runs-on: ubuntu-latest
 
-  - name: Checkout code
-    uses: actions/checkout@v2
-    run: ls -la
+    steps:
 
-  - name: Login to Docker Hub
-    uses: docker/login-action@v4
-    with:
-      username: ${{ secrets.DOCKERHUB_USERNAME }}
-      password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-  - name: Set up QEMU
-    uses: docker/setup-qemu-action@v4
+    - name: List files
+      run: ls -la
 
-  - name: Set up Docker Buildx
-    uses: docker/setup-buildx-action@v4
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  - name: clean with Maven
-    run: mvn clean package
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v4
 
-  - name: Build and push
-    uses: docker/build-push-action@v7
-    with:
-      push: true
-      tags: amjidcloud/java-app-ghactions:v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
 
-  - name: Configure AWS Credentials
-    uses: aws-actions/configure-aws-credentials@v6.1.0
-    with:
-      role-to-assume: <Role ARN you created in step 2>
-      aws-region: <AWS Region you want to use>
+    - name: clean with Maven
+      run: mvn clean package
 
-  - name: deploy to eks
-    run: |
-      aws eks update-kubeconfig --name <EKS Cluster Name>
-      kubectl apply -f k8s-deployment.yaml
+    - name: Build and push
+      uses: docker/build-push-action@v7
+      with:
+        push: true
+        tags: amjidcloud/java-app-ghactions:v1
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v6.1.0
+      with:
+        role-to-assume: <Role ARN you created in step 2>
+        aws-region: <AWS Region you want to use>
+
+    - name: deploy to eks
+      run: |
+        aws eks update-kubeconfig --name <EKS Cluster Name>
+        kubectl apply -f k8s-deployment.yaml
