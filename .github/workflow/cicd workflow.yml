@@ -39,5 +39,7 @@ jobs:
       role-to-assume: <Role ARN you created in step 2>
       aws-region: <AWS Region you want to use>
 
-  - name: Additional steps
-    run: aws sts get-caller-identity
+  - name: deploy to eks
+    run: |
+      aws eks update-kubeconfig --name <EKS Cluster Name>
+      kubectl apply -f k8s-deployment.yaml
