@@ -4,27 +4,40 @@ on:
     branches: [ main ]
 
 jobs:
-  - name: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        run: ls -la
+- name: build
+  runs-on: ubuntu-latest
+  steps:
 
-      
+  - name: Checkout code
+    uses: actions/checkout@v2
+    run: ls -la
 
+  - name: Login to Docker Hub
+    uses: docker/login-action@v4
+    with:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: clean with Maven
-        run: mvn clean package 
+  - name: Set up QEMU
+    uses: docker/setup-qemu-action@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6.1.0
-          with:
-            role-to-assume: <Role ARN you created in step 2>
-            aws-region: <AWS Region you want to use>
+  - name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v4
 
-      - name: Additional steps
-        run: aws sts get-caller-identity
+  - name: clean with Maven
+    run: mvn clean package
 
-          
-        
+  - name: Build and push
+    uses: docker/build-push-action@v7
+    with:
+      push: true
+      tags: amjidcloud/java-app-ghactions:v1
+
+  - name: Configure AWS Credentials
+    uses: aws-actions/configure-aws-credentials@v6.1.0
+    with:
+      role-to-assume: <Role ARN you created in step 2>
+      aws-region: <AWS Region you want to use>
+
+  - name: Additional steps
+    run: aws sts get-caller-identity
